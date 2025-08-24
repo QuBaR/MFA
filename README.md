@@ -32,14 +32,9 @@ Användare: `bertil` (utan MFA initialt) – kan aktivera MFA vid första inlogg
 5. Vid användning av en recovery code tas den bort (engångsbruk).
 
 ### Tips för authenticator
-1. Starten skriver ut Annas Base32-hemlighet.
+1. Starten skriver ut Bertils Base32-hemlighet.
 2. Lägg in den manuellt i t.ex. Microsoft / Google Authenticator.
-3. Alternativt skapa QR-kod: hämta provisioning URI via `MfaService.GetProvisioningUri(user, "DemoIssuer")` (lägg ett temporärt `Console.WriteLine`) och mata in i valfri online QR‑generator.
 
-Format provisioning URI:
-```
-otpauth://totp/Issuer:username?secret=BASE32&issuer=Issuer&digits=6&period=30&algorithm=SHA1
-```
 
 ## Vanliga testfall
 - Korrekt lösen + fel TOTP → ska nekas.
@@ -67,17 +62,4 @@ Koden roterar var 30:e sekund (standard). Verifieringsfönster tillåter ±1 ste
 - Lägga till lockout efter X misslyckade försök.
 - Maskera återstående recovery codes i UI (visa bara initialt / på begäran).
 
-Allt klart för inlämning: zipa mappen eller pusha till GitHub och fyll i `REPORT_TEMPLATE.md` med skärmdumpar. Behöver du nästa steg (QR-kod, persistens, WebAPI-version) – säg till.
-
-## Generera TOTP i Authenticator (sammanfattning)
-Använd hemlig Base32-nyckel som skrivs ut eller skapa en QR-kod via provisioning URI.
-
-## Säkerhetsnoteringar (för produktion)
-- Använd stark lösenordshantering (PBKDF2, bcrypt, scrypt, Argon2)
-- Kryptera/hascha TOTP-hemligheter vilande
-- Begränsa inloggningsförsök + rate limiting
-- Logga och övervaka lyckade/misslyckade försök
-- Skydda recovery codes (visa bara en gång)
-
-## Rapportmall
-Se `REPORT_TEMPLATE.md`.
+Allt klart för inlämning: zipa mappen eller pusha till ert GitHub repo  och posta svar i Learnpoint ett dokument med  med skärmdumpar. 
