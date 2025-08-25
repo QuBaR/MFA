@@ -36,6 +36,11 @@ public class MfaService
         return true;
     }
 
+    public void RegenerateRecoveryCodes(User user, int count = 5)
+    {
+        user.RecoveryCodes = GenerateRecoveryCodes(count);
+    }
+
     public string GetProvisioningUri(User user, string issuer)
     {
     if (user.TotpSecret == null) throw new InvalidOperationException("User not enrolled");
