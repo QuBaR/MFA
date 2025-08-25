@@ -10,6 +10,7 @@ En enkel övningsapplikation som visar hur man lägger till TOTP-baserad Multi-F
 - Recovery codes (engångsreservkoder)
  - Kontolåsning: 5 misslyckade lösenordsförsök låser kontot i 2 minuter
  - Meny efter inloggning för att visa kvarvarande recovery codes och (om slut) regenerera nya
+ - QR-kod för enkel onboarding i authenticator-app (QRCoder + provisioning URI)
 
 ## Körning
 ```powershell
@@ -50,6 +51,7 @@ Användare: `bertil` (utan MFA initialt) – kan aktivera MFA vid första inlogg
 ### Tips för authenticator
 1. Starten skriver ut Bertils Base32-hemlighet.
 2. Lägg in den manuellt i t.ex. Microsoft / Google Authenticator.
+ 3. När MFA aktiveras visas även en QR-kod om `EnableQr` = true i `appsettings.json`.
 
 
 ## Vanliga testfall
@@ -97,5 +99,20 @@ Struktur (kort):
 - `MfaServiceTests` – testar giltig respektive ogiltig TOTP-kod med deterministiska hemligheter.
 
 Lägg gärna till fler tester, t.ex. för recovery codes (förbrukning) och lockout.
+
+## Konfiguration
+Fil: `appsettings.json`
+```json
+{
+	"Issuer": "DemoIssuer",
+	"EnableQr": true,
+	"LogFile": "mfa_log.txt"
+}
+```
+- `Issuer`: Namn som visas i authenticator (otpauth:// etiketten).
+- `EnableQr`: Slå av/på QR-kodsutskrift i konsolen.
+- `LogFile`: Om satt skrivs enkla loggrader (MFA-aktivering) till fil.
+
+QR-kod rendreras i konsolen med block-tecken (dubbel bredd) och kan skannas direkt från de flesta terminaler med tillräcklig kontrast.
 
 Allt klart för inlämning: zipa mappen eller pusha till ert GitHub repo  och posta svar i Learnpoint ett dokument med  med skärmdumpar. 

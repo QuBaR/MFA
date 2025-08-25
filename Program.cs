@@ -1,9 +1,17 @@
 ﻿using MFA.Storage;
 using MFA.Services;
 using System.Text;
+using System.Text.Json;
+using QRCoder;
 
 var store = new InMemoryUserStore();
 Console.WriteLine("=== Demo: MFA Login System ===\n");
+
+// Load config
+var cfg = LoadConfig();
+string issuer = cfg.TryGetValue("Issuer", out var iss) ? iss! : "Demo";
+bool enableQr = !cfg.TryGetValue("EnableQr", out var eq) || bool.TryParse(eq, out var b) && b;
+string? logFile = cfg.TryGetValue("LogFile", out var lf) ? lf : null;
 
 Seed();
 
@@ -59,6 +67,13 @@ while (true)
 			var secret = store.Mfa.Enroll(user);
 			var base32 = OtpNet.Base32Encoding.ToString(secret);
 			Console.WriteLine($"Hemlig nyckel (skanna i authenticator-app): {base32}");
+			var uri = store.Mfa.GetProvisioningUri(user, issuer);
+			if (enableQr)
+			{
+				Console.WriteLine("QR-kod (scanna i authenticator-app):");
+				RenderQrToConsole(uri);
+			}
+			Log($"MFA enrolled for {user.Username}");
 			Console.WriteLine("Recovery codes:");
 			foreach (var rc in user.RecoveryCodes) Console.WriteLine("  " + rc);
 			Console.WriteLine();
@@ -160,4 +175,56 @@ string ReadPassword()
 	}
 	Console.WriteLine();
 	return sb.ToString();
+}
+
+Dictionary<string,string> LoadConfig()
+{
+	var dict = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+	try
+	{
+		var path = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+		if (!File.Exists(path)) return dict;
+		var json = File.ReadAllText(path);
+		using var doc = JsonDocument.Parse(json);
+		foreach (var p in doc.RootElement.EnumerateObject())
+		{
+			dict[p.Name] = p.Value.ToString();
+		}
+	}
+	catch { }
+	return dict;
+}
+
+void RenderQrToConsole(string text)
+{
+	// Generate QR payload (UTF8)
+	var gen = new QRCodeGenerator();
+	var data = gen.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+	var matrix = data.ModuleMatrix;
+	if (matrix == null) return;
+	// Add quiet zone
+	int size = matrix.Count;
+	var sb = new StringBuilder();
+	string black = "██"; // double width to look more square
+	string white = "  ";
+	for (int y = -1; y <= size; y++)
+	{
+		for (int x = -1; x <= size; x++)
+		{
+			bool dark = (x >=0 && y >=0 && x < size && y < size) && matrix[y][x];
+			sb.Append(dark ? black : white);
+		}
+		sb.AppendLine();
+	}
+	Console.WriteLine(sb.ToString());
+}
+
+void Log(string message)
+{
+	if (string.IsNullOrEmpty(logFile)) return;
+	try
+	{
+		File.AppendAllText(logFile!, $"{DateTime.UtcNow:o} {message}{Environment.NewLine}");
+	}
+	catch { }
 }
